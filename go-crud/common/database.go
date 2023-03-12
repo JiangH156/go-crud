@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"john/gin-curd/models"
@@ -13,13 +14,13 @@ func InitDB() *gorm.DB {
 	// username:password@(host:port)/database?charset=charset&parseTime=True&loc=loc
 	// 注册驱动
 	//driverName := "mysql"
-	username := "root"
-	password := "123456"
-	host := "127.0.0.1"
-	port := "3309"
-	database := "db1"
-	charset := "utf8mb4"
-	loc := "Local"
+	username := viper.GetString("datasource.username")
+	password := viper.GetString("datasource.password")
+	host := viper.GetString("datasource.host")
+	port := viper.GetString("datasource.port")
+	database := viper.GetString("datasource.database")
+	charset := viper.GetString("datasource.charset")
+	loc := viper.GetString("datasource.loc")
 
 	dsn := fmt.Sprintf("%s:%s@(%s:%s)/%s?charset=%s&parseTime=True&loc=%s",
 		username,
@@ -32,10 +33,11 @@ func InitDB() *gorm.DB {
 	)
 
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	// 数据库初始化失败，直接panic
 	if err != nil {
 		panic("database connect failed")
 	}
+	// 数据库初始化失败，直接panic
+
 	// 迁移创建数据库表
 	db.AutoMigrate(&models.User{})
 	DB = db

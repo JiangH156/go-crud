@@ -8,6 +8,7 @@ datasource:
   password: 123456
   host: 127.0.0.1
   port: 3309
-  database: db1
+  database: go_crud
   charset: utf8mb4
-  loc: Local
+  loc: Asia/Shanghai
+#  loc: Local

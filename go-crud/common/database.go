@@ -6,6 +6,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"john/gin-curd/models"
+	"net/url"
 )
 
 var DB *gorm.DB
@@ -29,7 +30,7 @@ func InitDB() *gorm.DB {
 		port,
 		database,
 		charset,
-		loc,
+		url.QueryEscape(loc),
 	)
 
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})

@@ -3,7 +3,7 @@
 ### 数据库初始化(docker)
 本地的3309端口挂载一个名为mysql，root用户名密码为123456的MySQL容器环境:
 ```
-docker run --name mysql -p 3309:3306 -e MYSQL_ROOT_PASSWORD=123456 -d mysql:8.0.19
+docker run --name mysql -p 3309:3306 -e MYSQL_ROOT_PASSWORD=123456 TZ=Asia/Shanghai -d mysql:8.0.19
 --name: 容器名称
 -e    : 设置环境
 -d    : 守护线程，后台运行

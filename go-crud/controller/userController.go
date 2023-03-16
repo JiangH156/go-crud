@@ -16,56 +16,63 @@ import (
 
 func Register(c *gin.Context) {
 	db := common.GetDB()
-	user := models.User{}
-	c.ShouldBind(&user)
+
+	//使用map获取请求的参数
+	//var requestMap = make(map[string]string)
+	//json.NewDecoder(c.Request.Body).Decode(&requestMap)
+
+	// 使用结构体接收参数
+	var requestUser = models.User{}
+	c.ShouldBind(&requestUser)
+
 	tx := db.Begin()
 
 	// 当name不为空时，需要判断长度
-	if user.Name != "" {
-		length := util.GetStringLength(user.Name)
+	if requestUser.Name != "" {
+		length := util.GetStringLength(requestUser.Name)
 		if length >= 30 {
 			response.Response(c, http.StatusUnprocessableEntity, 422, nil, "账号名长度必须小于30")
 			return
 		}
 	}
 
-	if len(user.Password) < 6 {
+	if len(requestUser.Password) < 6 {
 		response.Response(c, http.StatusUnprocessableEntity, 422, nil, "密码必须大于等于6位")
 		return
 	}
-	if len(user.Telephone) != 11 {
+	if len(requestUser.Telephone) != 11 {
 		response.Response(c, http.StatusUnprocessableEntity, 422, nil, "电话只能为11位")
 		return
 	}
-	if len(user.Name) == 0 {
-		user.Name = util.RandString(10)
+	if len(requestUser.Name) == 0 {
+		requestUser.Name = util.RandString(10)
 	}
 
 	////用户名已存在
-	//if hasUser(db, user.Name) {
+	//if hasUser(db, requestUser.Name) {
 	//	response.Response(c, http.StatusUnprocessableEntity, 422, nil, "用户名已存在")
 	//	return
 	//}
 
 	//已经存在该用户
-	if isTelephone(db, user.Telephone) {
+	if isTelephone(db, requestUser.Telephone) {
 		response.Response(c, http.StatusUnprocessableEntity, 422, nil, "用户已存在或电话号码重复注册")
 		return
 	}
 
-	fmt.Println(user.ID)
+	fmt.Println(requestUser.ID)
 
 	//加密密码
-	hasedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	hasedPassword, err := bcrypt.GenerateFromPassword([]byte(requestUser.Password), bcrypt.DefaultCost)
 	if err != nil {
 		response.Response(c, http.StatusInternalServerError, 500, nil, "加密失败")
 		return
 	}
 
 	newUser := models.User{
-		Name:      user.Name,
+		Name:      requestUser.Name,
 		Password:  string(hasedPassword),
-		Telephone: user.Telephone,
+		Telephone: requestUser.Telephone,
 	}
 	// 添加用户
 	tx.Create(&newUser)
@@ -81,8 +88,8 @@ func Register(c *gin.Context) {
 	}
 
 	response.Response(c, http.StatusOK, 200, gin.H{
-		"user":  dto.ToUserDto(user),
-		"token": token,
+		"requestUser": dto.ToUserDto(requestUser),
+		"token":       token,
 	}, "用户添加成功")
 	tx.Commit()
 }
@@ -131,6 +138,15 @@ func Login(ctx *gin.Context) {
 	//返回结果
 	response.Success(ctx, gin.H{"token": token}, "登录成功")
 
+}
+
+// 查看user相关信息
+func Info(ctx *gin.Context) {
+	user, _ := ctx.Get("user")
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": 200,
+		"data": gin.H{"user": dto.ToUserDto(user.(models.User))},
+	})
 }
 
 func isTelephone(db *gorm.DB, telephone string) bool {
